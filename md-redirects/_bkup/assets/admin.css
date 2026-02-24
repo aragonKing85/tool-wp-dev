@@ -1,0 +1,41 @@
+/* Ajustes mínimos sobre Bootstrap dentro del admin */
+.wrap .card { border-radius: 1rem; max-width: 100% !important; }
+code { background: #f8f9fa; padding: .2rem .4rem; border-radius: .25rem; }
+
+
+.table .badge {
+  font-size: 0.85rem;
+  padding: .4em .6em;
+  border-radius: .5em;
+}
+.form-control, .form-select {
+  border-radius: .5rem !important;
+}
+.btn {
+  border-radius: .5rem !important;
+}
+
+
+
+/* --- Estilos tabla redirecciones --- */
+
+/* Códigos más compactos */
+.column-status_code, .column-final_code, .column-enabled, .column-hits, .column-priority {
+    width: 90px !important;
+}
+.column-actions {
+    width: 185px !important;
+}
+
+
+#mdr-loop-results table code {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}
+#mdr-loop-results .badge {
+  font-size: 0.85rem;
+}
