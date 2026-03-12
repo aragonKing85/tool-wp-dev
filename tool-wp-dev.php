@@ -21,6 +21,7 @@ require_once TWD_PATH . 'blog-migrator/blog-migrator.php';
 require_once TWD_PATH . 'converter-post-cpt/ptc-basic.php';
 require_once TWD_PATH . 'polylang-fix-simulator/polylang-fix-simulator.php';
 require_once TWD_PATH . 'modules/web-inspector/web-inspector.php';
+require_once TWD_PATH . 'og-img-helper/og-img-helper.php';
 
 // ── Activation / Deactivation (crea/elimina tabla DB de MD Redirects) ─────────
 register_activation_hook( __FILE__, [ 'MDR_Activator',   'activate'   ] );

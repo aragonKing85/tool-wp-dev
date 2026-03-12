@@ -30,12 +30,16 @@ add_action('admin_menu', function() {
         // Vue 3 desde CDN
         wp_enqueue_script('vue-cdn', 'https://unpkg.com/vue@3/dist/vue.global.prod.js', [], null, true);
 
+        // Estilos del módulo
+        wp_enqueue_style('blog-migrator-css', BM_URL . 'assets/blog-migrator.css', [], TWD_VERSION);
+
         // Script principal del plugin
-        wp_enqueue_script('blog-migrator-js', BM_URL . 'assets/blog-migrator.js', ['vue-cdn'], '1.0', true);
+        wp_enqueue_script('blog-migrator-js', BM_URL . 'assets/blog-migrator.js', ['vue-cdn'], TWD_VERSION, true);
 
         wp_localize_script('blog-migrator-js', 'bm_ajax', [
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce'    => wp_create_nonce('bm_nonce')
+            'nonce'    => wp_create_nonce('bm_nonce'),
+            'site_url' => home_url(),
         ]);
     });
 });

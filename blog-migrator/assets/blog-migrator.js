@@ -1,127 +1,316 @@
+/**
+ * Blog Migrator — Componente Vue principal.
+ *
+ * Arquitectura de datos:
+ * - allPosts       : todos los posts descargados del servidor (una sola petición).
+ * - filteredPosts  : subconjunto de allPosts filtrado por searchQuery (computed).
+ * - paginatedPosts : página actual de filteredPosts según perPage (computed).
+ *
+ * La paginación y el buscador son 100% en cliente (Vue).
+ * El servidor solo hace una petición que devuelve todos los posts.
+ *
+ * @package Tool_WP_Dev
+ * @module  blog-migrator
+ */
 const { createApp, ref, computed, watch } = Vue;
 
 createApp({
     setup() {
-        const domain = ref('');
-        const connected = ref(false);
-        const languages = ref([]);
-        const selectedLang = ref('');
-        const posts = ref([]);
-        const message = ref('');
-        const messageColor = ref('#333');
-        const loading = ref(false);
-        const selectAll = ref(false);
 
-        // 🎛️ Selector global de estado
+        /* ── Estado ──────────────────────────────────────────────────────── */
+        const domain       = ref('');
+        const connected    = ref(false);
+        const languages    = ref([]);
+        const selectedLang = ref('');
+        const allPosts     = ref([]);    // Todos los posts (descargados de una vez)
+        const loading      = ref(false);
+
+        // Búsqueda y paginación en cliente
+        const searchQuery = ref('');
+        const currentPage = ref(1);
+        const perPage     = ref(100);
+
+        // Selector global de estado al importar
         const postStatusMode = ref('original');
 
-        // 📊 BATCHING: Estado del job
-        const jobStatus = ref(null);
+        // Selección persistente entre páginas
+        const selectedIds       = ref([]);    // array de IDs numéricos
+        const selectedPostsData = ref({});    // id → post data (para import)
+
+        // Notificaciones
+        const notification = ref(null);
+        let notifTimeout   = null;
+
+        // Batching
+        const jobStatus       = ref(null);
         const pollingInterval = ref(null);
 
-        function log(msg, type = 'info') {
-            message.value = msg;
-            messageColor.value = type === 'error' ? 'red' : type === 'success' ? 'green' : '#333';
+        /* ── Notificaciones ──────────────────────────────────────────────── */
+
+        /**
+         * Muestra una notificación tipada.
+         * Si type !== 'loading', desaparece automáticamente a los 5 s.
+         */
+        function notify(type, message) {
+            clearTimeout(notifTimeout);
+            notification.value = { type, message };
+            if (type !== 'loading') {
+                notifTimeout = setTimeout(() => { notification.value = null; }, 5000);
+            }
         }
 
-        async function post(action, data = {}) {
-            const formData = new FormData();
-            formData.append('action', action);
-            formData.append('nonce', bm_ajax.nonce);
-            formData.append('domain', domain.value);
-            for (const key in data) formData.append(key, data[key]);
+        /* ── AJAX ────────────────────────────────────────────────────────── */
 
-            const res = await fetch(bm_ajax.ajax_url, {
-                method: 'POST',
-                body: formData
+        async function ajax(action, data = {}) {
+            const body = new URLSearchParams({
+                action,
+                nonce:  bm_ajax.nonce,
+                domain: domain.value,
+                ...data,
             });
-            return await res.json();
+            const res = await fetch(bm_ajax.ajax_url, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body:    body.toString(),
+            });
+            return res.json();
         }
+
+        /* ── Helpers UI ──────────────────────────────────────────────────── */
+
+        function statusLabel(status) {
+            const map = {
+                publish: 'Publicado',
+                draft:   'Borrador',
+                pending: 'Pendiente',
+                private: 'Privado',
+                future:  'Programado',
+            };
+            return map[status] || status;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                return new Date(dateStr).toLocaleDateString('es-ES', {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                });
+            } catch { return dateStr; }
+        }
+
+        /* ── Posts filtrados y paginados (computed) ───────────────────────── */
+
+        /** Posts filtrados por el buscador. */
+        const filteredPosts = computed(() => {
+            const q = searchQuery.value.trim().toLowerCase();
+            if (!q) return allPosts.value;
+            return allPosts.value.filter(p => p.title.toLowerCase().includes(q));
+        });
+
+        /** Total de páginas según el filtro actual. */
+        const totalPages = computed(() =>
+            Math.max(1, Math.ceil(filteredPosts.value.length / perPage.value))
+        );
+
+        /** Posts visibles en la página actual. */
+        const paginatedPosts = computed(() => {
+            const start = (currentPage.value - 1) * perPage.value;
+            return filteredPosts.value.slice(start, start + perPage.value);
+        });
+
+        // Resetear a página 1 cuando cambia el buscador o el per_page
+        watch(searchQuery, () => { currentPage.value = 1; });
+        watch(perPage,     () => { currentPage.value = 1; });
+
+        /* ── Selección ───────────────────────────────────────────────────── */
+
+        function isSelected(id) {
+            return selectedIds.value.includes(id);
+        }
+
+        function togglePost(post) {
+            const idx = selectedIds.value.indexOf(post.id);
+            if (idx === -1) {
+                selectedIds.value.push(post.id);
+                selectedPostsData.value[post.id] = post;
+            } else {
+                selectedIds.value.splice(idx, 1);
+                delete selectedPostsData.value[post.id];
+            }
+        }
+
+        /** Total seleccionados (todas las páginas). */
+        const selectedCount = computed(() => selectedIds.value.length);
+
+        /** Posts seleccionados con data completa para el import. */
+        const selectedPosts = computed(() =>
+            selectedIds.value.map(id => selectedPostsData.value[id]).filter(Boolean)
+        );
+
+        /** True si todos los posts de la página visible están seleccionados. */
+        const isAllCurrentPageSelected = computed(() =>
+            paginatedPosts.value.length > 0 &&
+            paginatedPosts.value.every(p => isSelected(p.id))
+        );
+
+        /** True si solo algunos posts de la página visible están seleccionados. */
+        const isSomeCurrentPageSelected = computed(() =>
+            paginatedPosts.value.some(p => isSelected(p.id)) &&
+            !isAllCurrentPageSelected.value
+        );
+
+        /** Selecciona / deselecciona todos los posts de la página actual. */
+        function toggleAll(e) {
+            const check = e.target.checked;
+            paginatedPosts.value.forEach(p => {
+                if (check) {
+                    if (!isSelected(p.id)) {
+                        selectedIds.value.push(p.id);
+                        selectedPostsData.value[p.id] = p;
+                    }
+                } else {
+                    const idx = selectedIds.value.indexOf(p.id);
+                    if (idx !== -1) {
+                        selectedIds.value.splice(idx, 1);
+                        delete selectedPostsData.value[p.id];
+                    }
+                }
+            });
+        }
+
+        /* ── Conexión ────────────────────────────────────────────────────── */
 
         async function checkConnection() {
-            if (!domain.value) return log('Introduce un dominio válido.', 'error');
-            log('Comprobando conexión...');
-            loading.value = true;
-            const res = await post('bm_check_connection');
-            loading.value = false;
-
+            if (!domain.value.trim()) return notify('error', 'Introduce un dominio válido.');
+            notify('loading', 'Comprobando conexión...');
+            const res = await ajax('bm_check_connection');
             if (res.success) {
                 connected.value = true;
-                log(res.data.message, 'success');
+                notify('success', res.data.message);
             } else {
                 connected.value = false;
-                log(res.data.message, 'error');
+                notify('error', res.data.message);
             }
         }
 
         async function loadLanguages() {
             if (!connected.value) return;
-            log('Buscando idiomas disponibles...');
-            loading.value = true;
-            const res = await post('bm_get_languages');
-            loading.value = false;
-
+            notify('loading', 'Buscando idiomas disponibles...');
+            const res = await ajax('bm_get_languages');
             if (res.success && res.data.languages.length > 0) {
                 languages.value = res.data.languages;
-                log(`Detectados ${languages.value.length} idiomas (${res.data.source}).`, 'success');
+                notify('success', `${languages.value.length} idiomas detectados (${res.data.source}).`);
             } else {
-                log('No se detectaron idiomas (sitio monolingüe o API no disponible).', 'info');
                 languages.value = [];
+                notify('success', 'No se detectaron idiomas (sitio monolingüe o API no disponible).');
             }
         }
 
+        /* ── Exploración (carga completa, paginación en Vue) ─────────────── */
+
+        /**
+         * Descarga TODOS los posts del origen en una sola petición PHP.
+         * Vue pagina el resultado en cliente.
+         */
         async function explorePosts() {
-            posts.value = [];
-            loading.value = true;
-            log('Explorando posts...');
-            const res = await post('bm_explore_posts', { lang: selectedLang.value });
+            if (!connected.value) return;
+            loading.value  = true;
+            currentPage.value  = 1;
+            searchQuery.value  = '';
+            allPosts.value     = [];
+            notify('loading', 'Cargando todos los posts del origen…');
+
+            const res = await ajax('bm_explore_posts', { lang: selectedLang.value });
             loading.value = false;
 
-            if (!res.success) return log(res.data.message, 'error');
-            posts.value = res.data.posts.map(p => ({
-                ...p,
-                selected: false,
-                status: 'draft'
+            if (!res.success) return notify('error', res.data.message);
+
+            allPosts.value = res.data.posts;
+            notify('success', `${res.data.count} posts encontrados.`);
+        }
+
+        /* ── Importación con batching ─────────────────────────────────────── */
+
+        async function importSelected() {
+            if (selectedPosts.value.length === 0) {
+                return notify('error', 'Selecciona al menos un post.');
+            }
+
+            notify('loading', `Iniciando importación de ${selectedPosts.value.length} posts…`);
+            loading.value = true;
+
+            const selected = selectedPosts.value.map(p => ({
+                id:     p.id,
+                status: p.status,  // estado original del API origen
+                title:  p.title,
             }));
-            selectAll.value = false;
-            log(`Se encontraron ${res.data.count} posts.`, 'success');
+
+            const initRes = await ajax('bm_start_import', {
+                selected:         JSON.stringify(selected),
+                batch_size:       25,
+                post_status_mode: postStatusMode.value,
+            });
+
+            if (!initRes.success) {
+                loading.value = false;
+                return notify('error', initRes.data.message);
+            }
+
+            const totalBatches = initRes.data.job_state.total_batches;
+            startPolling();
+            await getJobStatus();
+
+            for (let i = 0; i < totalBatches; i++) {
+                notify('loading', `Procesando lote ${i + 1} de ${totalBatches}…`);
+                const batchRes = await ajax('bm_process_batch', { batch_index: i });
+
+                if (!batchRes.success) {
+                    loading.value = false;
+                    stopPolling();
+                    return notify('error', `Error en lote ${i + 1}: ${batchRes.data?.message}`);
+                }
+
+                if (batchRes.data.skipped) {
+                    notify('error', `Lote ${i + 1} saltado: ${batchRes.data.error}`);
+                }
+
+                await getJobStatus();
+            }
+
+            loading.value = false;
+            stopPolling();
+            await getJobStatus();
+
+            const finalState = jobStatus.value?.state;
+            if (finalState) {
+                notify('success',
+                    `Importación completada: ${finalState.imported_count} importados, ${finalState.failed_count} fallidos.`
+                );
+            }
+
+            // Limpiar selección
+            selectedIds.value       = [];
+            selectedPostsData.value = {};
         }
 
-        function toggleAll() {
-            posts.value.forEach(p => (p.selected = selectAll.value));
-        }
+        /* ── Job status & polling ─────────────────────────────────────────── */
 
-        watch(posts, () => {
-            selectAll.value = posts.value.length > 0 && posts.value.every(p => p.selected);
-        }, { deep: true });
-
-        const selectedPosts = computed(() => posts.value.filter(p => p.selected));
-
-        // 📊 BATCHING: Computed de progreso
         const jobProgress = computed(() => {
-            if (!jobStatus.value || !jobStatus.value.exists) return 0;
-            const state = jobStatus.value.state;
-            if (state.total === 0) return 0;
-            return (state.processed / state.total) * 100;
+            if (!jobStatus.value?.exists) return 0;
+            const s = jobStatus.value.state;
+            return s.total === 0 ? 0 : (s.processed / s.total) * 100;
         });
 
-        // 📊 BATCHING: Obtener estado del job
         async function getJobStatus() {
-            const res = await post('bm_get_job_status');
-            if (res.success) {
-                jobStatus.value = res.data;
-            }
+            const res = await ajax('bm_get_job_status');
+            if (res.success) jobStatus.value = res.data;
         }
 
-        // 📊 BATCHING: Iniciar polling
         function startPolling() {
             if (pollingInterval.value) return;
-            pollingInterval.value = setInterval(async () => {
-                await getJobStatus();
-            }, 1500); // Poll cada 1.5 segundos
+            pollingInterval.value = setInterval(getJobStatus, 2000);
         }
 
-        // 📊 BATCHING: Detener polling
         function stopPolling() {
             if (pollingInterval.value) {
                 clearInterval(pollingInterval.value);
@@ -129,111 +318,42 @@ createApp({
             }
         }
 
-        // 📊 BATCHING: Procesar lote
-        async function processBatch(batchIndex) {
-            const res = await post('bm_process_batch', { batch_index: batchIndex });
-            return res;
-        }
-
-        // 📊 BATCHING: Importación con batching
-        async function importSelected() {
-            if (selectedPosts.value.length === 0) return log('Selecciona al menos un post.', 'error');
-
-            log(`Iniciando importación de ${selectedPosts.value.length} posts en lotes de 25...`, 'info');
-            loading.value = true;
-
-            // 1. Iniciar job
-            const initRes = await post('bm_start_import', {
-                selected: JSON.stringify(selectedPosts.value.map(p => ({
-                    id: p.id,
-                    status: p.status,
-                    title: p.title // Para logs
-                }))),
-                batch_size: 25,
-                post_status_mode: postStatusMode.value // Modo global
-            });
-
-            if (!initRes.success) {
-                loading.value = false;
-                return log(initRes.data.message, 'error');
-            }
-
-            log('Job iniciado. Procesando lotes...', 'info');
-
-            // 2. Iniciar polling para actualizar UI
-            startPolling();
-            await getJobStatus(); // Primera carga
-
-            // 3. Procesar lotes uno a uno
-            const totalBatches = initRes.data.job_state.total_batches;
-
-            for (let i = 0; i < totalBatches; i++) {
-                // Actualizar estado antes de procesar
-                await getJobStatus();
-
-                log(`Procesando lote ${i + 1} de ${totalBatches}...`, 'info');
-
-                const batchRes = await processBatch(i);
-
-                if (!batchRes.success) {
-                    loading.value = false;
-                    stopPolling();
-                    return log(`Error procesando lote ${i}: ${batchRes.data.message}`, 'error');
-                }
-
-                // Verificar si se saltó el lote
-                if (batchRes.data.skipped) {
-                    log(`⚠️ Lote ${i} saltado tras fallos: ${batchRes.data.error}`, 'error');
-                }
-            }
-
-            // 4. Finalizar
-            loading.value = false;
-            stopPolling();
-            await getJobStatus(); // Última actualización
-
-            const finalState = jobStatus.value.state;
-            log(`✅ Importación completada: ${finalState.imported_count} importados, ${finalState.failed_count} fallidos.`, 'success');
-        }
-
-        // 📊 BATCHING: Cancelar job
         async function cancelJob() {
-            if (!confirm('¿Cancelar la importación en curso?')) return;
-
             stopPolling();
-            const res = await post('bm_cancel_job');
-
+            const res = await ajax('bm_cancel_job');
             if (res.success) {
                 jobStatus.value = null;
-                log('Importación cancelada.', 'info');
+                notify('success', 'Importación cancelada.');
             }
         }
 
-        // Verificar si hay job en curso al cargar
+        /** Cierra el panel de progreso (solo cuando el job ya no está running). */
+        async function dismissProgress() {
+            await ajax('bm_cancel_job'); // Limpia el estado de la BD
+            jobStatus.value = null;
+        }
+
+        /* ── Init ─────────────────────────────────────────────────────────── */
+
         getJobStatus();
 
+        /* ── Expose ───────────────────────────────────────────────────────── */
         return {
-            domain,
-            connected,
-            languages,
-            selectedLang,
-            posts,
-            message,
-            messageColor,
-            loading,
-            selectAll,
-            checkConnection,
-            loadLanguages,
-            explorePosts,
-            toggleAll,
-            selectedPosts,
-            importSelected,
+            // Estado
+            domain, connected, languages, selectedLang,
+            allPosts, paginatedPosts, filteredPosts,
+            loading, searchQuery, perPage,
+            currentPage, totalPages,
+            postStatusMode, notification,
+            // Selección
+            selectedCount, isAllCurrentPageSelected, isSomeCurrentPageSelected,
+            isSelected, togglePost, toggleAll,
+            // Acciones
+            checkConnection, loadLanguages, explorePosts, importSelected,
+            // Helpers
+            statusLabel, formatDate,
             // Batching
-            jobStatus,
-            jobProgress,
-            cancelJob,
-            // Selector global de estado
-            postStatusMode
+            jobStatus, jobProgress, cancelJob, dismissProgress,
         };
     }
 }).mount('#app');
