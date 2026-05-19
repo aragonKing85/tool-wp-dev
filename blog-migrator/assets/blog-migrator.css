@@ -6,30 +6,16 @@
  * @module  blog-migrator
  */
 
-/* ── Variables ────────────────────────────────────────────────────────────── */
+/* ── Variables locales (tokens globales en assets/css/admin-global.css) ─────── */
 .twd-bm-wrap {
-    --twd-color-primary:     #2563eb;
-    --twd-color-primary-h:   #1d4ed8;
-    --twd-color-success:     #16a34a;
-    --twd-color-success-bg:  #f0fdf4;
-    --twd-color-success-bdr: #bbf7d0;
-    --twd-color-error:       #dc2626;
-    --twd-color-error-bg:    #fef2f2;
-    --twd-color-error-bdr:   #fecaca;
+    /* Loading — específico de este módulo */
     --twd-color-loading-bg:  #eff6ff;
     --twd-color-loading-bdr: #bfdbfe;
     --twd-color-loading:     #1d4ed8;
-    --twd-color-text:        #111827;
-    --twd-color-text-muted:  #6b7280;
-    --twd-color-border:      #e5e7eb;
-    --twd-color-bg:          #f9fafb;
-    --twd-color-card:        #ffffff;
+
+    /* Filas de tabla — específico de este módulo */
     --twd-color-row-hover:   #f0f7ff;
     --twd-color-row-sel:     #eff6ff;
-    --twd-radius:            10px;
-    --twd-radius-sm:         6px;
-    --twd-shadow:            0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-    --twd-font:              -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 /* ── Reset ────────────────────────────────────────────────────────────────── */
@@ -40,8 +26,6 @@
 .twd-bm-wrap {
     font-family: var(--twd-font);
     color: var(--twd-color-text);
-    width: 100%;
-    max-width: none;
     padding: 0 0 48px;
 }
 

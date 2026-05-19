@@ -8,9 +8,12 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-$og_active    = (bool) get_option( 'twd_og_active', 0 );
-$og_image_id  = absint( get_option( 'twd_og_image_id', 0 ) );
-$og_image_url = esc_url( get_option( 'twd_og_image_url', '' ) );
+$og_active      = (bool) get_option( 'twd_og_active', 0 );
+$og_image_id    = absint( get_option( 'twd_og_image_id', 0 ) );
+$og_image_url   = esc_url( get_option( 'twd_og_image_url', '' ) );
+$og_title       = get_option( 'twd_og_title', '' );
+$og_description = get_option( 'twd_og_description', '' );
+$og_type        = get_option( 'twd_og_type', 'website' );
 
 $thumb_url = '';
 if ( $og_image_id > 0 ) {
@@ -116,6 +119,78 @@ $saved = isset( $_GET['saved'] ) && '1' === $_GET['saved'];
                         <p class="twd-og-hint">
                             Tamaño recomendado: <strong>1200 × 630 px</strong>. Formatos: JPG, PNG o WebP.
                         </p>
+                    </div>
+                </div>
+
+                <!-- Metadatos OG globales -->
+                <div class="twd-og-card">
+                    <div class="twd-og-card__header">
+                        <h2>Metadatos OG globales</h2>
+                        <p>Valores de reserva cuando el post o página no define los suyos propios.</p>
+                    </div>
+                    <div class="twd-og-card__body">
+
+                        <!-- og:title -->
+                        <div class="twd-og-field">
+                            <label class="twd-og-field__label" for="twd_og_title">
+                                <code>og:title</code>
+                                <span class="twd-og-field__tag">Genérico</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="twd_og_title"
+                                name="twd_og_title"
+                                class="twd-input"
+                                value="<?php echo esc_attr( $og_title ); ?>"
+                                placeholder="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>"
+                                maxlength="95"
+                            >
+                            <p class="twd-og-field__hint">Si está vacío se usa el nombre del sitio. Los posts usan su propio título automáticamente.</p>
+                        </div>
+
+                        <!-- og:description -->
+                        <div class="twd-og-field">
+                            <label class="twd-og-field__label" for="twd_og_description">
+                                <code>og:description</code>
+                                <span class="twd-og-field__tag">Genérico</span>
+                            </label>
+                            <textarea
+                                id="twd_og_description"
+                                name="twd_og_description"
+                                class="twd-textarea"
+                                rows="3"
+                                maxlength="200"
+                                placeholder="<?php echo esc_attr( get_bloginfo( 'description' ) ); ?>"
+                            ><?php echo esc_textarea( $og_description ); ?></textarea>
+                            <p class="twd-og-field__hint">Si está vacío se usa el tagline del sitio. Los posts usan su excerpt automáticamente.</p>
+                        </div>
+
+                        <!-- og:type -->
+                        <div class="twd-og-field">
+                            <label class="twd-og-field__label" for="twd_og_type">
+                                <code>og:type</code>
+                                <span class="twd-og-field__tag">Genérico</span>
+                            </label>
+                            <select id="twd_og_type" name="twd_og_type" class="twd-select">
+                                <option value="website" <?php selected( $og_type, 'website' ); ?>>website — Sitio web genérico</option>
+                                <option value="article" <?php selected( $og_type, 'article' ); ?>>article — Blog / publicaciones</option>
+                                <option value="blog"    <?php selected( $og_type, 'blog' ); ?>>blog — Blog</option>
+                            </select>
+                            <p class="twd-og-field__hint">Los posts y páginas individuales usan <code>article</code> automáticamente.</p>
+                        </div>
+
+                        <!-- og:site_name (solo lectura) -->
+                        <div class="twd-og-field">
+                            <label class="twd-og-field__label">
+                                <code>og:site_name</code>
+                                <span class="twd-og-field__tag twd-og-field__tag--auto">Automático</span>
+                            </label>
+                            <div class="twd-og-readonly">
+                                <?php echo esc_html( get_bloginfo( 'name' ) ); ?>
+                            </div>
+                            <p class="twd-og-field__hint">Se obtiene siempre del nombre del sitio en WordPress.</p>
+                        </div>
+
                     </div>
                 </div>
 

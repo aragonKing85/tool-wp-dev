@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 add_action( 'admin_menu', 'twd_wi_admin_menu' );
 
 function twd_wi_admin_menu() {
-    add_submenu_page(
+    $hook = add_submenu_page(
         TWD_MENU,
         'Web Inspector',
         'Web Inspector',
@@ -13,6 +13,16 @@ function twd_wi_admin_menu() {
         'twd-web-inspector',
         'twd_wi_render_page'
     );
+
+    add_action( 'admin_enqueue_scripts', function ( $current_hook ) use ( $hook ) {
+        if ( $current_hook !== $hook ) return;
+        wp_enqueue_style(
+            'twd-wi-admin',
+            TWD_URL . 'modules/web-inspector/assets/web-inspector-admin.css',
+            [ 'twd-admin-global' ],
+            TWD_VERSION
+        );
+    } );
 }
 
 // ── Botón toggle en la admin bar (frontend) ───────────────────────────────────
@@ -144,35 +154,140 @@ function twd_wi_frontend_script() {
 function twd_wi_render_page() {
     if ( ! current_user_can( 'manage_options' ) ) return;
 
-    $src        = TWD_URL . 'modules/web-inspector/assets/web-inspector.umd.js';
+    $src         = TWD_URL . 'modules/web-inspector/assets/web-inspector.umd.js';
     $bookmarklet = 'javascript:(function(){if(window.__twdWiLoaded)return;var s=document.createElement("script");s.src="' . esc_js( $src ) . '";s.onload=function(){window.__twdWiLoaded=true;window.__twdWiActive=true;};document.head.appendChild(s);})();';
     ?>
-    <div class="wrap">
-        <h1>Web Inspector</h1>
-        <p>Herramienta de auditoría DOM y SEO. Analiza accesibilidad, estructura de cabeceras, Open Graph, rendimiento y más en cualquier página.</p>
+    <div class="twd-wi-wrap">
 
-        <h2>Opción 1 &mdash; Botón en la barra de administración</h2>
-        <p>Visita cualquier página pública del sitio. El botón <strong>&#128269; Web Inspector</strong> en la barra superior activa el inspector. Una vez activo, el mismo botón cambia a <strong>&#x2715; Finalizar audit</strong> para cerrarlo por completo.</p>
+        <!-- ── Header ──────────────────────────────────────────────────────── -->
+        <div class="twd-wi-header">
+            <span class="twd-wi-icon">&#128269;</span>
+            <div>
+                <h1>Web Inspector</h1>
+                <p>Auditoría DOM y SEO en tiempo real. Analiza accesibilidad, cabeceras, Open Graph, indexación y rendimiento en cualquier página.</p>
+            </div>
+        </div>
 
-        <h2>Opción 2 &mdash; Bookmarklet <em>(funciona en cualquier sitio)</em></h2>
-        <p>Arrastra el siguiente enlace a la barra de marcadores de tu navegador:</p>
-        <p>
-            <a href="<?php echo esc_attr( $bookmarklet ); ?>"
-               style="display:inline-block;padding:8px 18px;background:#2271b1;color:#fff;border-radius:4px;text-decoration:none;font-weight:600;font-size:14px;">
-                &#128269; Web Inspector
-            </a>
-        </p>
-        <p><em>Una vez guardado, visita cualquier URL y haz clic en el marcador para activar el inspector.</em></p>
+        <!-- ── Opciones de activación ───────────────────────────────────────── -->
+        <div class="twd-wi-options">
 
-        <h2>Categorías auditadas</h2>
-        <ul style="list-style:disc;padding-left:1.5em;line-height:2">
-            <li><strong>Informaci&oacute;n</strong>: alt en im&aacute;genes, IDs duplicados, roles ARIA, tabindex, labels en inputs</li>
-            <li><strong>Cabeceras</strong>: estructura H1-H6, m&uacute;ltiples H1, H1 vac&iacute;o</li>
-            <li><strong>Enlaces</strong>: href vac&iacute;o, href="#", texto de ancla pobre, aria en enlaces</li>
-            <li><strong>Open Graph</strong>: og:title, og:image</li>
-            <li><strong>Indexaci&oacute;n</strong>: canonical, viewport, noindex, meta description (presencia y longitud)</li>
-            <li><strong>Rendimiento</strong>: im&aacute;genes sin lazy-load, scripts sin defer, formatos no modernos, dimensiones ausentes, theme-color</li>
-        </ul>
-    </div>
+            <!-- Opción 1: Admin bar -->
+            <div class="twd-wi-option">
+                <div class="twd-wi-option__header">
+                    <span class="twd-wi-option__num">1</span>
+                    <h2>Botón en la barra de administración</h2>
+                </div>
+                <div class="twd-wi-option__body">
+                    <div class="twd-wi-bar-demo">
+                        <span class="twd-wi-bar-demo__dot"></span>
+                        &#128269; Web Inspector
+                    </div>
+                    <p>Visita cualquier página pública del sitio. El botón <strong>&#128269; Web Inspector</strong> en la barra superior activa el inspector.</p>
+                    <p>Una vez activo, cambia a <strong>&#x2715; Finalizar audit</strong> para cerrarlo.</p>
+                </div>
+            </div>
+
+            <!-- Opción 2: Bookmarklet -->
+            <div class="twd-wi-option">
+                <div class="twd-wi-option__header">
+                    <span class="twd-wi-option__num">2</span>
+                    <h2>Bookmarklet — funciona en cualquier sitio</h2>
+                </div>
+                <div class="twd-wi-option__body">
+                    <div class="twd-wi-bookmarklet-wrap">
+                        <p>Arrastra este botón a tu barra de marcadores:</p>
+                        <a href="<?php echo esc_attr( $bookmarklet ); ?>" class="twd-wi-bookmarklet-link">
+                            &#128269; Web Inspector
+                        </a>
+                    </div>
+                    <p class="twd-wi-hint">&#8505; Una vez guardado, visita cualquier URL y haz clic en el marcador para activar el inspector.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── Categorías auditadas ─────────────────────────────────────────── -->
+        <div class="twd-wi-card">
+            <div class="twd-wi-card__header">
+                <h2>Categorías auditadas</h2>
+            </div>
+            <div class="twd-wi-card__body">
+                <div class="twd-wi-cats">
+
+                    <div class="twd-wi-cat">
+                        <div class="twd-wi-cat__title">
+                            <span class="twd-wi-cat__icon">&#9432;</span> Información
+                        </div>
+                        <ul class="twd-wi-cat__items">
+                            <li>Alt en imágenes</li>
+                            <li>IDs duplicados</li>
+                            <li>Roles ARIA</li>
+                            <li>Tabindex</li>
+                            <li>Labels en inputs</li>
+                        </ul>
+                    </div>
+
+                    <div class="twd-wi-cat">
+                        <div class="twd-wi-cat__title">
+                            <span class="twd-wi-cat__icon">&#35;</span> Cabeceras
+                        </div>
+                        <ul class="twd-wi-cat__items">
+                            <li>Estructura H1-H6</li>
+                            <li>Múltiples H1</li>
+                            <li>H1 vacío</li>
+                        </ul>
+                    </div>
+
+                    <div class="twd-wi-cat">
+                        <div class="twd-wi-cat__title">
+                            <span class="twd-wi-cat__icon">&#128279;</span> Enlaces
+                        </div>
+                        <ul class="twd-wi-cat__items">
+                            <li>href vacío o "#"</li>
+                            <li>Texto de ancla pobre</li>
+                            <li>ARIA en enlaces</li>
+                        </ul>
+                    </div>
+
+                    <div class="twd-wi-cat">
+                        <div class="twd-wi-cat__title">
+                            <span class="twd-wi-cat__icon">&#128247;</span> Open Graph
+                        </div>
+                        <ul class="twd-wi-cat__items">
+                            <li>og:title</li>
+                            <li>og:image</li>
+                        </ul>
+                    </div>
+
+                    <div class="twd-wi-cat">
+                        <div class="twd-wi-cat__title">
+                            <span class="twd-wi-cat__icon">&#128269;</span> Indexación
+                        </div>
+                        <ul class="twd-wi-cat__items">
+                            <li>Canonical</li>
+                            <li>Viewport</li>
+                            <li>Noindex</li>
+                            <li>Meta description (presencia y longitud)</li>
+                        </ul>
+                    </div>
+
+                    <div class="twd-wi-cat">
+                        <div class="twd-wi-cat__title">
+                            <span class="twd-wi-cat__icon">&#9889;</span> Rendimiento
+                        </div>
+                        <ul class="twd-wi-cat__items">
+                            <li>Imágenes sin lazy-load</li>
+                            <li>Scripts sin defer</li>
+                            <li>Formatos no modernos</li>
+                            <li>Dimensiones ausentes</li>
+                            <li>Theme-color</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.twd-wi-wrap -->
     <?php
 }

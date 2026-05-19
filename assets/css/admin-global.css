@@ -1,0 +1,145 @@
+/*
+ * Dev Tools — Estilos globales del plugin.
+ *
+ * Se cargan en TODAS las pantallas del plugin (cualquier submenú de Dev Tools).
+ * Contiene: design tokens (CSS variables), reset base y utilidades globales.
+ * NO incluir estilos específicos de una sola herramienta.
+ *
+ * @package Tool_WP_Dev
+ */
+
+/* ── Design tokens ────────────────────────────────────────────────────────── */
+/*
+ * Variables disponibles en todo el DOM cuando el plugin está activo.
+ * Cada herramienta puede sobreescribir en su propio scope si necesita un valor
+ * distinto, pero estos son los valores de referencia de la paleta compartida.
+ */
+:root {
+    /* Colores principales */
+    --twd-color-primary:     #2563eb;
+    --twd-color-primary-h:   #1d4ed8;
+
+    /* Estado: éxito */
+    --twd-color-success:     #16a34a;
+    --twd-color-success-bg:  #f0fdf4;
+    --twd-color-success-bdr: #bbf7d0;
+
+    /* Estado: error / peligro */
+    --twd-color-danger:      #dc2626;
+    --twd-color-error:       #dc2626;
+    --twd-color-error-bg:    #fef2f2;
+    --twd-color-error-bdr:   #fecaca;
+
+    /* Tipografía y texto */
+    --twd-color-text:        #111827;
+    --twd-color-text-muted:  #6b7280;
+    --twd-font:              -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    /* Superficies */
+    --twd-color-border:      #e5e7eb;
+    --twd-color-bg:          #f9fafb;
+    --twd-color-card:        #ffffff;
+
+    /* Forma */
+    --twd-radius:            10px;
+    --twd-radius-sm:         6px;
+
+    /* Sombras */
+    --twd-shadow:            0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+    --twd-shadow-md:         0 4px 12px rgba(0,0,0,.10);
+}
+
+/* ── Layout base ──────────────────────────────────────────────────────────── */
+/*
+ * Todos los wrappers principales del plugin usan 100% de ancho.
+ * Clase aplicada en: .twd-og-wrap, .twd-bm-wrap, y futuros wrappers.
+ */
+.twd-og-wrap,
+.twd-bm-wrap,
+.twd-wi-wrap {
+    width: 100%;
+    max-width: none;
+}
+
+/* ── Controles de formulario genéricos ────────────────────────────────────── */
+/*
+ * Clases reutilizables en todas las herramientas del plugin.
+ * Usan doble clase (.twd-og-wrap .twd-input) para superar la especificidad
+ * de los estilos por defecto del admin de WordPress.
+ */
+.twd-og-wrap .twd-input,
+.twd-bm-wrap .twd-input,
+.twd-wi-wrap .twd-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: var(--twd-font);
+    color: var(--twd-color-text);
+    background: #fff;
+    border: 1px solid var(--twd-color-border);
+    border-radius: var(--twd-radius-sm);
+    box-shadow: none;
+    transition: border-color .15s, box-shadow .15s;
+    line-height: 1.5;
+    height: auto;
+}
+
+.twd-og-wrap .twd-input:focus,
+.twd-bm-wrap .twd-input:focus,
+.twd-wi-wrap .twd-input:focus {
+    outline: none;
+    border-color: var(--twd-color-primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+.twd-og-wrap .twd-textarea,
+.twd-bm-wrap .twd-textarea,
+.twd-wi-wrap .twd-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: var(--twd-font);
+    color: var(--twd-color-text);
+    background: #fff;
+    border: 1px solid var(--twd-color-border);
+    border-radius: var(--twd-radius-sm);
+    box-shadow: none;
+    transition: border-color .15s, box-shadow .15s;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.twd-og-wrap .twd-textarea:focus,
+.twd-bm-wrap .twd-textarea:focus,
+.twd-wi-wrap .twd-textarea:focus {
+    outline: none;
+    border-color: var(--twd-color-primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+.twd-og-wrap .twd-select,
+.twd-bm-wrap .twd-select,
+.twd-wi-wrap .twd-select {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: var(--twd-font);
+    color: var(--twd-color-text);
+    background: #fff;
+    border: 1px solid var(--twd-color-border);
+    border-radius: var(--twd-radius-sm);
+    box-shadow: none;
+    cursor: pointer;
+    height: auto;
+    line-height: 1.5;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.twd-og-wrap .twd-select:focus,
+.twd-bm-wrap .twd-select:focus,
+.twd-wi-wrap .twd-select:focus {
+    outline: none;
+    border-color: var(--twd-color-primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}

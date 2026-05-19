@@ -17,11 +17,7 @@ class Blog_Migrator_API {
      * 1. Comprobar si el dominio tiene API REST accesible
      * ---------------------------------------------------------------------- */
     public static function check_connection() {
-        check_ajax_referer( 'bm_nonce', 'nonce' );
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => 'Permisos insuficientes.' ] );
-        }
+        twd_verify_ajax_request( 'bm_nonce' );
 
         $domain   = esc_url_raw( $_POST['domain'] ?? '' );
         $endpoint = rtrim( $domain, '/' ) . '/wp-json/wp/v2/posts?per_page=1';
@@ -43,11 +39,7 @@ class Blog_Migrator_API {
      * 2. Detectar idiomas disponibles (Polylang o WPML)
      * ---------------------------------------------------------------------- */
     public static function get_languages() {
-        check_ajax_referer( 'bm_nonce', 'nonce' );
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => 'Permisos insuficientes.' ] );
-        }
+        twd_verify_ajax_request( 'bm_nonce' );
 
         $domain = esc_url_raw( $_POST['domain'] ?? '' );
         $langs  = [];
@@ -81,11 +73,7 @@ class Blog_Migrator_API {
      * Devuelve: posts[] con id, title, date, date_gmt, status, link, categories[].
      * ---------------------------------------------------------------------- */
     public static function explore_posts() {
-        check_ajax_referer( 'bm_nonce', 'nonce' );
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => 'Permisos insuficientes.' ] );
-        }
+        twd_verify_ajax_request( 'bm_nonce' );
 
         $domain    = esc_url_raw( $_POST['domain'] ?? '' );
         $lang      = sanitize_text_field( $_POST['lang'] ?? '' );
@@ -165,11 +153,7 @@ class Blog_Migrator_API {
      * 4. Importar posts (LEGACY — mantenido para compatibilidad)
      * ---------------------------------------------------------------------- */
     public static function import_posts() {
-        check_ajax_referer( 'bm_nonce', 'nonce' );
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => 'Permisos insuficientes.' ] );
-        }
+        twd_verify_ajax_request( 'bm_nonce' );
 
         $domain   = esc_url_raw( $_POST['domain'] ?? '' );
         $selected = json_decode( stripslashes( $_POST['selected'] ?? '[]' ), true );
@@ -219,11 +203,7 @@ class Blog_Migrator_API {
      * 5. BATCHING: Iniciar job de importación
      * ---------------------------------------------------------------------- */
     public static function start_import() {
-        check_ajax_referer( 'bm_nonce', 'nonce' );
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => 'Permisos insuficientes.' ] );
-        }
+        twd_verify_ajax_request( 'bm_nonce' );
 
         $domain          = esc_url_raw( $_POST['domain'] ?? '' );
         $selected        = json_decode( stripslashes( $_POST['selected'] ?? '[]' ), true );
@@ -259,11 +239,7 @@ class Blog_Migrator_API {
      * 6. BATCHING: Procesar un lote con reintentos
      * ---------------------------------------------------------------------- */
     public static function process_batch() {
-        check_ajax_referer( 'bm_nonce', 'nonce' );
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => 'Permisos insuficientes.' ] );
-        }
+        twd_verify_ajax_request( 'bm_nonce' );
 
         $batch_index = intval( $_POST['batch_index'] ?? 0 );
         $job         = new Blog_Migrator_Job_State();
@@ -422,11 +398,7 @@ class Blog_Migrator_API {
      * 8. BATCHING: Obtener estado del job
      * ---------------------------------------------------------------------- */
     public static function get_job_status() {
-        check_ajax_referer( 'bm_nonce', 'nonce' );
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => 'Permisos insuficientes.' ] );
-        }
+        twd_verify_ajax_request( 'bm_nonce' );
 
         $job   = new Blog_Migrator_Job_State();
         $state = $job->get();
@@ -442,11 +414,7 @@ class Blog_Migrator_API {
      * 9. BATCHING: Cancelar/Resetear job
      * ---------------------------------------------------------------------- */
     public static function cancel_job() {
-        check_ajax_referer( 'bm_nonce', 'nonce' );
-
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error( [ 'message' => 'Permisos insuficientes.' ] );
-        }
+        twd_verify_ajax_request( 'bm_nonce' );
 
         ( new Blog_Migrator_Job_State() )->reset();
 

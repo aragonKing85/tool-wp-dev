@@ -1,0 +1,266 @@
+/*
+ * Web Inspector — Estilos de la página de administración.
+ * Cargados únicamente en la pantalla de Web Inspector.
+ *
+ * @package Tool_WP_Dev
+ * @module  web-inspector
+ */
+
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+.twd-wi-wrap *,
+.twd-wi-wrap *::before,
+.twd-wi-wrap *::after { box-sizing: border-box; }
+
+.twd-wi-wrap {
+    font-family: var(--twd-font);
+    color: var(--twd-color-text);
+    width: 100%;
+    max-width: none;
+    padding: 0 0 48px;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+.twd-wi-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--twd-color-border);
+}
+
+.twd-wi-icon { font-size: 36px; line-height: 1; }
+
+.twd-wi-header h1 {
+    margin: 0 0 3px;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--twd-color-text);
+}
+
+.twd-wi-header p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--twd-color-text-muted);
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+.twd-wi-card {
+    background: var(--twd-color-card);
+    border: 1px solid var(--twd-color-border);
+    border-radius: var(--twd-radius);
+    box-shadow: var(--twd-shadow);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.twd-wi-card__header {
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid var(--twd-color-border);
+    background: var(--twd-color-bg);
+}
+
+.twd-wi-card__header h2 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--twd-color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.twd-wi-card__body {
+    padding: 20px;
+}
+
+/* ── Opciones de activación ───────────────────────────────────────────────── */
+.twd-wi-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 780px) {
+    .twd-wi-options { grid-template-columns: 1fr; }
+}
+
+.twd-wi-option {
+    background: var(--twd-color-card);
+    border: 1px solid var(--twd-color-border);
+    border-radius: var(--twd-radius);
+    box-shadow: var(--twd-shadow);
+    overflow: hidden;
+}
+
+.twd-wi-option__header {
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid var(--twd-color-border);
+    background: var(--twd-color-bg);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.twd-wi-option__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--twd-color-primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.twd-wi-option__header h2 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--twd-color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.twd-wi-option__body {
+    padding: 18px 20px;
+}
+
+.twd-wi-option__body p {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--twd-color-text-muted);
+}
+
+.twd-wi-option__body p:last-child { margin-bottom: 0; }
+
+/* ── Badge "Admin Bar" ────────────────────────────────────────────────────── */
+.twd-wi-bar-demo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #1d2327;
+    color: #c3c4c7;
+    font-size: 13px;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-family: var(--twd-font);
+    margin-bottom: 12px;
+}
+
+.twd-wi-bar-demo__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--twd-color-success);
+    flex-shrink: 0;
+}
+
+/* ── Bookmarklet ──────────────────────────────────────────────────────────── */
+.twd-wi-bookmarklet-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--twd-color-bg);
+    border: 1px solid var(--twd-color-border);
+    border-radius: var(--twd-radius-sm);
+    margin-bottom: 12px;
+}
+
+.twd-wi-bookmarklet-wrap p {
+    margin: 0 !important;
+    font-size: 13px !important;
+    flex: 1;
+}
+
+.twd-wi-bookmarklet-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: var(--twd-color-primary);
+    color: #fff !important;
+    border-radius: var(--twd-radius-sm);
+    text-decoration: none !important;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 2px dashed transparent;
+    transition: background .15s, border-color .15s;
+    cursor: grab;
+}
+
+.twd-wi-bookmarklet-link:hover {
+    background: var(--twd-color-primary-h);
+    color: #fff !important;
+}
+
+.twd-wi-hint {
+    font-size: 12px !important;
+    color: var(--twd-color-text-muted) !important;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ── Grid de categorías ───────────────────────────────────────────────────── */
+.twd-wi-cats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+}
+
+.twd-wi-cat {
+    border: 1px solid var(--twd-color-border);
+    border-radius: var(--twd-radius-sm);
+    overflow: hidden;
+}
+
+.twd-wi-cat__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--twd-color-bg);
+    border-bottom: 1px solid var(--twd-color-border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--twd-color-text);
+}
+
+.twd-wi-cat__icon {
+    font-size: 15px;
+    line-height: 1;
+}
+
+.twd-wi-cat__items {
+    margin: 0;
+    padding: 10px 14px 10px 14px;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.twd-wi-cat__items li {
+    font-size: 13px;
+    color: var(--twd-color-text-muted);
+    padding-left: 14px;
+    position: relative;
+    line-height: 1.5;
+}
+
+.twd-wi-cat__items li::before {
+    content: '·';
+    position: absolute;
+    left: 2px;
+    color: var(--twd-color-primary);
+    font-weight: 700;
+}

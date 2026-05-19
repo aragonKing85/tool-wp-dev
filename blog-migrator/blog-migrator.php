@@ -31,7 +31,7 @@ add_action('admin_menu', function() {
         wp_enqueue_script('vue-cdn', 'https://unpkg.com/vue@3/dist/vue.global.prod.js', [], null, true);
 
         // Estilos del módulo
-        wp_enqueue_style('blog-migrator-css', BM_URL . 'assets/blog-migrator.css', [], TWD_VERSION);
+        wp_enqueue_style('blog-migrator-css', BM_URL . 'assets/blog-migrator.css', ['twd-admin-global'], TWD_VERSION);
 
         // Script principal del plugin
         wp_enqueue_script('blog-migrator-js', BM_URL . 'assets/blog-migrator.js', ['vue-cdn'], TWD_VERSION, true);
